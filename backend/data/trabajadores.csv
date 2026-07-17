@@ -1,0 +1,61 @@
+id_trabajador,nombre,rol,cargo,grupo_asignado,estado_laboral,fecha_ingreso
+SUP-001,Raúl Quispe Chávez,supervisor,Ingeniero Supervisor de Área,,activo,2022-04-01
+SUP-002,Marco Condori Medina,supervisor,Ingeniero Supervisor de Área,,activo,2021-10-01
+SUP-003,Hugo Mamani Quispe,supervisor,Ingeniero Supervisor de Área,,activo,2021-04-01
+SUP-004,Elena Torres Escobar,supervisor,Ingeniero Supervisor de Área,,activo,2021-09-01
+INS-001,Lucía Medina Salas,inspector,Inspector de Molienda,G-01,activo,2025-05-01
+INS-002,Carlos Flores Salas,inspector,Inspector de Molienda,G-01,activo,2022-04-01
+INS-003,Ricardo Condori Huamán,inspector,Inspector de Molienda,G-01,activo,2023-06-01
+INS-004,Vanessa Mamani Ríos,inspector,Inspector de Molienda,G-01,activo,2024-02-01
+INS-005,Flor Cárdenas Escobar,inspector,Inspector de Molienda,G-02,activo,2023-10-01
+INS-006,Lucía Huamán Mamani,inspector,Inspector de Molienda,G-02,activo,2023-02-01
+INS-007,Elena Condori Paredes,inspector,Inspector de Molienda,G-02,activo,2023-03-01
+INS-008,Manuel Yucra Rojas,inspector,Inspector de Molienda,G-02,activo,2021-10-01
+INS-009,Rosa Medina Vargas,inspector,Inspector de Molienda,G-03,activo,2024-05-01
+INS-010,Flor Vargas Apaza,inspector,Inspector de Molienda,G-03,activo,2021-04-01
+INS-011,José Apaza Paredes,inspector,Inspector de Molienda,G-03,activo,2022-10-01
+INS-012,Fernando Rojas Ramos,inspector,Inspector de Molienda,G-03,activo,2024-03-01
+INS-013,Vanessa Ccopa Vargas,inspector,Inspector de Molienda,G-04,activo,2025-05-01
+INS-014,Hugo Zúñiga Paredes,inspector,Inspector de Molienda,G-04,activo,2022-09-01
+INS-015,Gladys Huamán Mamani,inspector,Inspector de Molienda,G-04,activo,2022-11-01
+INS-016,Rosa Salas Escobar,inspector,Inspector de Molienda,G-04,activo,2024-10-01
+INS-017,Freddy Torres Chávez,inspector,Inspector de Molienda,G-05,cesado,2021-11-01
+INS-018,Raúl Medina Chávez,inspector,Inspector de Molienda,G-05,activo,2023-02-01
+INS-019,Karina Salas Flores,inspector,Inspector de Molienda,G-05,activo,2023-09-01
+INS-020,María Torres Condori,inspector,Inspector de Molienda,G-05,activo,2023-11-01
+INS-021,Nancy Escobar Rojas,inspector,Inspector de Molienda,G-06,activo,2022-09-01
+INS-022,Ruth Quispe Escobar,inspector,Inspector de Molienda,G-06,activo,2021-02-01
+INS-023,Manuel Cárdenas Vargas,inspector,Inspector de Molienda,G-06,activo,2025-02-01
+INS-024,Pedro Ramos Huamán,inspector,Inspector de Molienda,G-06,cesado,2025-03-01
+INS-025,Marco Ramos Medina,inspector,Inspector de Molienda,G-07,activo,2025-10-01
+INS-026,Hugo Rojas Medina,inspector,Inspector de Molienda,G-07,activo,2022-12-01
+INS-027,Sandra Paredes Yucra,inspector,Inspector de Molienda,G-07,activo,2025-08-01
+INS-028,Raúl Vargas Vargas,inspector,Inspector de Molienda,G-07,activo,2021-10-01
+INS-029,Flor Vargas Zúñiga,inspector,Inspector de Molienda,G-08,activo,2021-12-01
+INS-030,Miguel Vargas Huamán,inspector,Inspector de Molienda,G-08,activo,2023-02-01
+INS-031,Nancy Vargas Chávez,inspector,Inspector de Molienda,G-08,activo,2022-09-01
+INS-032,Marco Zúñiga Zúñiga,inspector,Inspector de Molienda,G-08,activo,2024-07-01
+INS-033,Lucía Condori Condori,inspector,Inspector de Molienda,G-09,activo,2023-07-01
+INS-034,César Ríos Mamani,inspector,Inspector de Molienda,G-09,activo,2021-01-01
+INS-035,Julio Apaza Condori,inspector,Inspector de Molienda,G-09,activo,2022-09-01
+INS-036,Iván Ccopa Salas,inspector,Inspector de Molienda,G-09,activo,2024-04-01
+INS-037,Jorge Ríos Medina,inspector,Inspector de Molienda,G-10,activo,2025-01-01
+INS-038,Pedro Vargas Flores,inspector,Inspector de Molienda,G-10,activo,2024-04-01
+INS-039,Julio Mamani Flores,inspector,Inspector de Molienda,G-10,activo,2024-05-01
+INS-040,Freddy Cárdenas Salas,inspector,Inspector de Molienda,G-10,activo,2025-11-01
+ACO-001,Gladys Ccopa Rojas,acopiador,Administrativo de Acopio,,activo,2023-04-01
+ACO-002,Miguel Zúñiga Medina,acopiador,Administrativo de Acopio,,activo,2021-12-01
+ACO-003,Fernando Mamani Mamani,acopiador,Administrativo de Acopio,,activo,2025-08-01
+ACO-004,Nancy Torres Flores,acopiador,Administrativo de Acopio,,activo,2021-09-01
+ACO-005,Pedro Flores Huamán,acopiador,Administrativo de Acopio,,activo,2025-02-01
+ACO-006,Patricia Paredes Condori,acopiador,Administrativo de Acopio,,activo,2025-04-01
+TRA-001,José Escobar Huamán,transportista,Transportista de Material,,activo,2025-10-01
+TRA-002,Ruth Apaza Chávez,transportista,Transportista de Material,,activo,2023-04-01
+TRA-003,Vanessa Paredes Ccopa,transportista,Transportista de Material,,activo,2023-08-01
+TRA-004,Fernando Huamán Quispe,transportista,Transportista de Material,,activo,2025-02-01
+TRA-005,Jorge Medina Rojas,transportista,Transportista de Material,,activo,2022-06-01
+TRA-006,Jorge Vargas Yucra,transportista,Transportista de Material,,activo,2024-09-01
+TRA-007,Sandra Escobar Torres,transportista,Transportista de Material,,activo,2025-05-01
+TRA-008,Juan Ccopa Chávez,transportista,Transportista de Material,,activo,2021-12-01
+TRA-009,Flor Ccopa Chávez,transportista,Transportista de Material,,activo,2022-12-01
+TRA-010,Ricardo Rojas Chávez,transportista,Transportista de Material,,activo,2023-01-01

@@ -7,8 +7,8 @@ import pandas as pd
 from langchain_core.tools import tool
 
 
-# Directorio base de datos
-DATA_DIR = Path(__file__).parent.parent / "data" / "documentos"
+# Directorio base de datos (CSV en data/, PDFs en data/documentos/)
+DATA_DIR = Path(__file__).parent.parent / "data"
 
 
 @tool
@@ -272,3 +272,43 @@ def consultar_grupo_inspector(
         return "No se pudo acceder a los datos de grupos de inspectores. Contacte al administrador."
     except Exception as e:
         return f"No se pudo acceder a los datos de grupos de inspectores. Contacte al administrador."
+
+
+# ── Tool RAG ─────────────────────────────────────────────────────────────────
+
+@tool
+def buscar_en_documentos(pregunta: str) -> str:
+    """
+    Busca información en los documentos internos de la Cooperativa Minera El Dorado
+    usando búsqueda semántica (RAG sobre FAISS).
+    Devuelve los fragmentos más relevantes con su fuente (nombre del PDF).
+
+    Usar cuando el usuario pregunta sobre procedimientos, normas, políticas,
+    protocolos de seguridad, reglamentos o cualquier información documental.
+
+    Args:
+        pregunta: Pregunta o texto a buscar en los documentos. Obligatorio.
+
+    Returns:
+        String con los fragmentos relevantes y sus fuentes, o mensaje informativo.
+    """
+    from app.vectorstore import get_vectorstore
+
+    try:
+        vs = get_vectorstore()
+        docs = vs.similarity_search(pregunta, k=4)
+
+        if not docs:
+            return "No se encontró información relevante en los documentos internos."
+
+        fragmentos = []
+        for i, doc in enumerate(docs, start=1):
+            fuente = doc.metadata.get("source", "desconocido")
+            # Mostrar solo el nombre del archivo, no la ruta completa
+            fuente = fuente.split("/")[-1] if "/" in fuente else fuente
+            fragmentos.append(f"[Fragmento {i} — Fuente: {fuente}]\n{doc.page_content.strip()}")
+
+        return "\n\n".join(fragmentos)
+
+    except Exception as exc:
+        return f"No se pudo acceder a los documentos internos. Contacte al administrador. ({exc})"

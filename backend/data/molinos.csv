@@ -1,0 +1,11 @@
+molino_id,nombre,estado,motivo_estado,capacidad_ton_dia
+M-01,Trapiche Los Andes,activo,,8
+M-02,Trapiche San Judas,activo,,12
+M-03,Trapiche El Dorado,activo,,15
+M-04,Trapiche Virgen del Carmen,activo,,10
+M-05,Trapiche Illary,activo,,20
+M-06,Trapiche Amanecer,activo,,12
+M-07,Trapiche Qori Wasi,activo,,10
+M-08,Trapiche Santa Rosa,activo,,12
+M-09,Trapiche Nueva Esperanza,activo,,10
+M-10,Trapiche Cerro Rico,requiere_reevaluacion,Rendimiento por debajo del promedio,10
