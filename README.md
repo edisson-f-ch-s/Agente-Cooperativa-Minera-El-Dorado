@@ -58,6 +58,8 @@ aluragente/
 
 ## 🚀 Instalación y Ejecución
 
+> **¿Primera vez?** Ve a [INICIO_RAPIDO.md](INICIO_RAPIDO.md) para una guía paso a paso en español.
+
 ### Requisitos Previos
 
 - Docker y Docker Compose
