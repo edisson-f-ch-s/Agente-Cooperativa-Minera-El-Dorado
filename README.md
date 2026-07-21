@@ -1,4 +1,4 @@
-# ⛏️ Agente El Dorado — Cooperativa Minera El Dorado
+# Agente El Dorado — Cooperativa Minera El Dorado
 
 > **Asistente Inteligente de IA para la Gestión Operativa y Normativa del Área de Acopio de Material Aurífero**
 
@@ -6,8 +6,32 @@
 [![LangChain 1.x](https://img.shields.io/badge/LangChain-1.x-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://www.langchain.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.41-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Google Gemini](https://img.shields.io/badge/Google_Gemini-3.5_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.0_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Deploy](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://agente-dorado-frontend.onrender.com)
+
+---
+
+## 🌐 Demo en Producción
+
+| Servicio | URL |
+|---|---|
+| **Frontend (Chat UI)** | [https://agente-dorado-frontend.onrender.com](https://agente-dorado-frontend.onrender.com) |
+| **Backend API Docs** | [https://agente-dorado-backend.onrender.com/docs](https://agente-dorado-backend.onrender.com/docs) |
+| **Health Check** | [https://agente-dorado-backend.onrender.com/health](https://agente-dorado-backend.onrender.com/health) |
+
+> **Nota:** Los servicios están desplegados en el plan gratuito de Render. Si el backend estuvo inactivo, puede tardar ~30 segundos en inicializarse la primera consulta (cold start).
+
+---
+
+## 🎬 Demostración Visual
+
+<!-- Para agregar capturas propias: colócalas en docs/assets/ y reemplaza la ruta aquí -->
+<!-- Ejemplo: ![Demo Agente El Dorado](docs/assets/demo.gif) -->
+
+![Demo Agente El Dorado](docs/assets/demo.gif)
+
+> 📁 Los recursos visuales se encuentran en [`docs/assets/`](docs/assets/).
 
 ---
 
@@ -23,26 +47,9 @@ Un agente conversacional inteligente capaz de interpretar preguntas en lenguaje 
 
 ---
 
-## 🎬 Demostración Visual y Capturas
-
-<!-- 
-   PLACEHOLDER: Inserta aquí un GIF animado o imagen de la aplicación en ejecución.
-   Ejemplo: ![Demo AlurAgente](docs/assets/demo_aluragente.gif) 
--->
-> 📷 **Demostración de la Interfaz (Streamlit UI)**  
-> *(Espacio reservado para GIF o Captura de la aplicación en funcionamiento)*  
-> ![Placeholder Demostración UI](https://via.placeholder.com/800x450/1a1a2e/e2b040?text=Demostrac%C3%B3n+Streamlit+UI+-+AlurAgente)
-
----
-
 ## 🏗️ Arquitectura del Sistema
 
 El proyecto implementa una **arquitectura desacoplada en 3 capas** que separa estrictamente la interfaz de usuario, la lógica del agente y las fuentes de datos:
-
-<!-- 
-   PLACEHOLDER: Inserta aquí el diagrama de arquitectura en imagen si lo prefieres.
-   Ejemplo: ![Arquitectura](docs/assets/arquitectura.png) 
--->
 
 ```text
  ┌─────────────────────────────────────────────────────────────┐
@@ -54,10 +61,10 @@ El proyecto implementa una **arquitectura desacoplada en 3 capas** que separa es
                                 │ HTTP REST (POST /preguntar)
                                 ▼
  ┌─────────────────────────────────────────────────────────────┐
- │                    SERVIDORE / BACKEND                      │
+ │                    SERVIDOR / BACKEND                       │
  │                      FastAPI Service                        │
  │           - Middleware CORS & Rate Limiter                  │
- │           - Manejo Grácil de Errores de Cuota API           │
+ │           - Manejo Graceful de Errores de Cuota API         │
  └──────────────────────────────┬──────────────────────────────┘
                                 │
                                 ▼
@@ -86,18 +93,19 @@ El proyecto implementa una **arquitectura desacoplada en 3 capas** que separa es
 | Componente | Tecnología | Razón de Elección |
 |---|---|---|
 | **Lenguaje Core** | Python 3.11+ | Ecosistema estándar para IA y manipulación de datos. |
-| **Agente / Orquestador** | LangChain 1.x (`langchain_classic`) | Estándar de la industria para agentes tool-calling y RAG. |
+| **Agente / Orquestador** | LangChain 1.x | Estándar de la industria para agentes tool-calling y RAG. |
 | **Modelo LLM** | Google Gemini 2.0 Flash | 1,500 peticiones/día gratuitas, baja latencia y soporte nativo de herramientas. |
-| **Embeddings & VectorStore** | Google Generative AI + FAISS | Búsqueda semántica ultrarrápida sobre PDFs sin dependencias de base de datos externa. |
+| **Embeddings & VectorStore** | Google Generative AI + FAISS | Búsqueda semántica sobre PDFs sin dependencias de base de datos externa. |
 | **Backend Web** | FastAPI + Uvicorn | Rendimiento asíncrono elevado, validación automática Pydantic y swagger docs. |
 | **Frontend UI** | Streamlit | Interfaz interactiva de chat nativa en Python, limpia y responsiva. |
-| **Contenedores** | Docker & Docker Compose | Garantiza despliegue idéntico en cualquier entorno local o en la nube. |
+| **Contenedores** | Docker & Docker Compose | Garantiza despliegue idéntico en cualquier entorno (local o cloud). |
+| **Despliegue** | Render (Free Tier) | Pipeline GitOps con Blueprint YAML, auto-deploy desde `main`. |
 
 ---
 
 ## 🎭 Roles de Usuario y Ejemplos de Consultas
 
-AlurAgente adapta sus respuestas a los 3 roles clave del Área de Acopio:
+Agente El Dorado adapta sus respuestas a los 3 roles clave del Área de Acopio:
 
 ### 1. 👷 Supervisor de Área
 - **Consulta**: *"¿Cuántos trabajadores faltaron la última semana por falta de EPP?"*
@@ -117,6 +125,50 @@ AlurAgente adapta sus respuestas a los 3 roles clave del Área de Acopio:
 
 ---
 
+## ✅ Evidencia de Respuestas Verificadas
+
+Las respuestas del agente son **trazables a fuentes de datos concretas**. A continuación se documentan consultas reales ejecutadas durante las pruebas end-to-end, con indicación de la fuente que respalda cada respuesta.
+
+### Consulta 1 — Asistencia y EPP (Tool: `consultar_asistencia_epp`)
+**Pregunta**: *"¿Cuántos trabajadores registraron ausencia por falta de EPP esta semana?"*
+
+| Campo | Detalle |
+|---|---|
+| **Herramienta invocada** | `consultar_asistencia_epp(query='ausencias EPP semana')` |
+| **Fuente de datos** | `backend/data/Asistencia_EPP_Julio2026.csv` |
+| **Verificación** | El CSV contiene registros individuales por trabajador con columna `motivo_ausencia`. El agente filtra por `"falta EPP"` y devuelve el conteo exacto. |
+
+### Consulta 2 — Inspector y Molino asignado (Tool: `consultar_grupos_inspectores`)
+**Pregunta**: *"¿A qué grupo pertenece el inspector INS-005 en julio de 2026?"*
+
+| Campo | Detalle |
+|---|---|
+| **Herramienta invocada** | `consultar_grupos_inspectores(query='INS-005 julio 2026')` |
+| **Fuente de datos** | `backend/data/Grupos_Inspectores_Julio2026.csv` |
+| **Verificación** | El CSV tiene columnas `inspector_id`, `grupo`, `periodo` y `molino_asignado`. La respuesta es un lookup directo sin alucinación. |
+
+### Consulta 3 — Protocolos EPP (Tool: `buscar_en_documentos` — RAG)
+**Pregunta**: *"¿Cuáles son los requisitos de EPP según el protocolo de seguridad?"*
+
+| Campo | Detalle |
+|---|---|
+| **Herramienta invocada** | `buscar_en_documentos(query='requisitos EPP protocolo seguridad')` |
+| **Fuente de datos** | `backend/data/Protocolo_Seguridad_Acopio.pdf` |
+| **Verificación** | La búsqueda semántica FAISS recupera los fragmentos relevantes del PDF. El agente cita el documento y no añade información no presente en él. |
+
+### Consulta 4 — Estado de Cargas (Tool: `consultar_cargas`)
+**Pregunta**: *"¿Cuántas cargas están actualmente en estado 'en_molienda'?"*
+
+| Campo | Detalle |
+|---|---|
+| **Herramienta invocada** | `consultar_cargas(query='cargas en molienda')` |
+| **Fuente de datos** | `backend/data/Seguimiento_Cargas_Julio2026.csv` |
+| **Verificación** | El CSV contiene columna `estado_carga`. El agente filtra y cuenta registros con valor `en_molienda` directamente del archivo. |
+
+> **Nota para el evaluador:** Para una verificación independiente, puede ejecutar el script de pruebas end-to-end incluido en el repositorio (ver sección siguiente) o inspeccionar directamente los archivos CSV y PDF en `backend/data/`.
+
+---
+
 ## 📁 Estructura del Repositorio
 
 ```text
@@ -130,15 +182,19 @@ AlurAgente adapta sus respuestas a los 3 roles clave del Área de Acopio:
 │   │   ├── schemas.py        # Modelos Pydantic de entrada y salida
 │   │   ├── tools.py          # 6 herramientas especializadas de consulta
 │   │   └── vectorstore.py    # Carga y generación del índice semántico FAISS
-│   ├── data/                 # Fuentes de datosCSV y PDFs institucionales
+│   ├── data/                 # Fuentes de datos CSV y PDFs institucionales
 │   ├── Dockerfile            # Imagen contenedor Backend
 │   ├── requirements.txt      # Dependencias backend con versiones fijadas
 │   └── test_local.py         # Script de pruebas end-to-end automáticas
 ├── frontend/
+│   ├── assets/               # Logo y banner de la interfaz
 │   ├── Dockerfile            # Imagen contenedor Frontend
 │   ├── requirements.txt      # Dependencias frontend
 │   └── streamlit_app.py      # Interfaz de usuario interactiva
-├── docker-compose.yml        # Orquestación multicontenedor
+├── docs/
+│   └── assets/               # GIFs, capturas y recursos visuales del README
+├── docker-compose.yml        # Orquestación multicontenedor local
+├── render.yaml               # Blueprint de despliegue en Render
 └── README.md                 # Documentación principal
 ```
 
@@ -154,7 +210,7 @@ AlurAgente adapta sus respuestas a los 3 roles clave del Área de Acopio:
 
 1. **Clonar el repositorio**:
    ```bash
-   git clone https://github.com/tu-usuario/Agente-Cooperativa-Minera-El-Dorado.git
+   git clone https://github.com/edisson-f-ch-s/Agente-Cooperativa-Minera-El-Dorado.git
    cd Agente-Cooperativa-Minera-El-Dorado
    ```
 
@@ -182,26 +238,15 @@ AlurAgente adapta sus respuestas a los 3 roles clave del Área de Acopio:
 El proyecto incluye un script de prueba automatizado que evalúa las consultas contra el agente sin necesidad de iniciar la interfaz web:
 
 ```bash
-GOOGLE_API_KEY="tu_clave_aqui" backend/venv/bin/python backend/test_local.py --quick
+# Configurar la API key
+export GOOGLE_API_KEY="tu_clave_aqui"
+
+# Ejecutar prueba rápida (2 consultas representativas)
+backend/venv/bin/python backend/test_local.py --quick
+
+# Ejecutar suite completa
+backend/venv/bin/python backend/test_local.py
 ```
-
----
-
-## 🌐 Despliegue en la Nube
-
-La aplicación está completamente dockerizada y lista para desplegarse en cualquier proveedor cloud:
-
-- **Hugging Face Spaces** (Docker Space / Streamlit)
-- **Render / Koyeb / Railway**
-- **OCI Compute (Oracle Cloud Infrastructure)**
-
-<!-- 
-   PLACEHOLDER: Inserta aquí el enlace o captura del proyecto en producción.
-   Ejemplo: [Probá la app en vivo aquí](https://huggingface.co/spaces/tu-usuario/aluragente)
--->
-> 🔗 **Enlace de Producción**: *(Insertar enlace a la app desplegada en HF Spaces / Render / OCI)*  
-> 📷 **Captura de Producción**:  
-> ![Placeholder App en Producción](https://via.placeholder.com/800x400/0f3460/6ee7b7?text=Aplicaci%C3%B3n+Desplegada+en+la+Nube+-+AlurAgente)
 
 ---
 

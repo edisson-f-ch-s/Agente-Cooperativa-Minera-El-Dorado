@@ -193,7 +193,7 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.markdown("### ⛏️ CM El Dorado")
+        st.markdown("### CM El Dorado")
 
     st.markdown("#### ⚙️ Estado del Sistema")
 
@@ -265,7 +265,7 @@ st.markdown(f"""
 <div class="hero-banner-container">
     <div class="hero-banner-bg"></div>
     <div class="hero-banner-overlay">
-        <h1 class="hero-title">⛏️ Agente El Dorado</h1>
+        <h1 class="hero-title">Agente El Dorado</h1>
         <div class="hero-subtitle">Asistente Operativo Inteligente · Área de Acopio de Material Aurífero</div>
     </div>
 </div>
