@@ -1,15 +1,20 @@
 """
 Agente LangChain con tool-calling para AlurAgente.
-Orquesta las 6 tools sobre datos CSV y RAG de PDFs usando Gemini 2.0 Flash.
+Orquesta las 6 tools sobre datos CSV y RAG de PDFs usando Gemini.
 """
 import logging
 from typing import Any
 
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain.memory import ConversationBufferWindowMemory
+from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+from app.gemini_config import (
+    get_model_candidates,
+    is_model_unavailable_error,
+    is_quota_error,
+)
 from app.tools import (
     buscar_en_documentos,
     consultar_asistencia,
@@ -56,17 +61,25 @@ TOOLS = [
 # ── Estado global del proceso ─────────────────────────────────────────────────
 
 _agent_executor: AgentExecutor | None = None
-_session_memories: dict[str, ConversationBufferWindowMemory] = {}
+_active_model: str | None = None
+
+# Historial de mensajes por sesión: list de HumanMessage / AIMessage.
+# Se mantiene en memoria del proceso — suficiente para una evaluación de challenge
+# donde los pods no escalan horizontalmente.
+_session_histories: dict[str, list[BaseMessage]] = {}
 
 
 # ── Construcción del agente ───────────────────────────────────────────────────
 
-def _build_agent() -> AgentExecutor:
+def _build_agent(model: str) -> AgentExecutor:
     """
-    Construye el AgentExecutor con LangChain y Gemini 2.0 Flash.
-    Se invoca una sola vez durante el startup del servidor.
+    Construye el AgentExecutor con LangChain y el modelo Gemini indicado.
     """
-    llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0)
+    llm = ChatGoogleGenerativeAI(
+        model=model,
+        temperature=0,
+        max_retries=1,
+    )
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
@@ -85,31 +98,140 @@ def _build_agent() -> AgentExecutor:
         max_iterations=5,
     )
 
-    logger.info("AgentExecutor construido con %d tools.", len(TOOLS))
+    logger.info("AgentExecutor construido con %d tools usando %s.", len(TOOLS), model)
     return executor
+
+
+def _probe_model(model: str) -> None:
+    """
+    Verifica que el modelo responde antes de usarlo en producción.
+    Solo detecta errores de modelo no existente (404); los errores de cuota
+    se ignoran aquí porque el agente debe arrancar aunque la cuota esté agotada.
+    """
+    llm = ChatGoogleGenerativeAI(model=model, temperature=0, max_retries=0)
+    try:
+        llm.invoke("Responde exactamente: OK")
+    except Exception as exc:
+        # Re-lanzar solo si el modelo no existe; la cuota agotada no impide el arranque.
+        if not is_quota_error(exc):
+            raise
+        logger.warning(
+            "Cuota agotada durante probe de %s — el agente arrancará de todas formas. "
+            "Las consultas fallarán hasta que la cuota se restaure.",
+            model,
+        )
+
+
+def _initialize_with_fallback() -> tuple[AgentExecutor, str]:
+    """
+    Selecciona el primer modelo disponible de la lista de candidatos.
+    Si la cuota está agotada, el agente se construye igualmente para que el
+    servidor arranque y retorne mensajes de error descriptivos en cada consulta.
+    """
+    errors: list[str] = []
+
+    for model in get_model_candidates():
+        try:
+            _probe_model(model)
+            executor = _build_agent(model)
+            if model != get_model_candidates()[0]:
+                logger.warning(
+                    "Modelo configurado no disponible. Usando fallback: %s",
+                    model,
+                )
+            return executor, model
+        except Exception as exc:
+            if is_model_unavailable_error(exc):
+                errors.append(f"{model}: no disponible")
+                logger.warning("Modelo %s no disponible: %s", model, exc)
+                continue
+            raise
+
+    detail = "; ".join(errors) if errors else "sin modelos configurados"
+    raise RuntimeError(
+        "Ningún modelo Gemini disponible. "
+        f"Detalle: {detail}. "
+        "Use GEMINI_MODEL=gemini-3.5-flash o gemini-3.1-flash-lite."
+    )
 
 
 def initialize_agent() -> None:
     """Inicializa el singleton del AgentExecutor. Llamar desde el lifespan de FastAPI."""
+    global _agent_executor, _active_model
+    _agent_executor, _active_model = _initialize_with_fallback()
+
+
+def get_active_model() -> str | None:
+    """Devuelve el modelo Gemini activo en esta instancia."""
+    return _active_model
+
+
+def _ensure_agent_ready() -> AgentExecutor:
     global _agent_executor
-    _agent_executor = _build_agent()
+
+    if _agent_executor is None:
+        logger.warning("AgentExecutor no inicializado. Construyendo ahora...")
+        initialize_agent()
+
+    assert _agent_executor is not None
+    return _agent_executor
 
 
-# ── Gestión de memoria por sesión ─────────────────────────────────────────────
-
-def _get_or_create_memory(sesion_id: str) -> ConversationBufferWindowMemory:
+def _retry_with_next_model(exc: Exception) -> AgentExecutor | None:
     """
-    Devuelve la memoria de la sesión indicada, creándola si no existe.
-    Conserva los últimos 10 intercambios (k=10).
+    Si el modelo activo quedó deprecado en caliente, reconstruye con el siguiente candidato.
     """
-    if sesion_id not in _session_memories:
-        _session_memories[sesion_id] = ConversationBufferWindowMemory(
-            k=10,
-            return_messages=True,
-            memory_key="chat_history",
-        )
+    global _agent_executor, _active_model
+
+    if not is_model_unavailable_error(exc) or _active_model is None:
+        return None
+
+    candidates = get_model_candidates()
+    try:
+        current_index = candidates.index(_active_model)
+    except ValueError:
+        current_index = -1
+
+    for model in candidates[current_index + 1:]:
+        try:
+            logger.warning("Reintentando con modelo de respaldo: %s", model)
+            _probe_model(model)
+            _agent_executor = _build_agent(model)
+            _active_model = model
+            return _agent_executor
+        except Exception as fallback_exc:
+            if is_model_unavailable_error(fallback_exc):
+                logger.warning("Fallback %s tampoco disponible: %s", model, fallback_exc)
+                continue
+            raise
+
+    return None
+
+
+# ── Gestión de historial por sesión ──────────────────────────────────────────
+
+# Máximo de intercambios a retener en memoria por sesión.
+_MAX_HISTORY_TURNS = 10
+
+
+def _get_history(sesion_id: str) -> list[BaseMessage]:
+    """Devuelve el historial de mensajes de la sesión, creándolo si no existe."""
+    if sesion_id not in _session_histories:
+        _session_histories[sesion_id] = []
         logger.debug("Nueva sesión creada: %s", sesion_id)
-    return _session_memories[sesion_id]
+    return _session_histories[sesion_id]
+
+
+def _append_to_history(sesion_id: str, pregunta: str, respuesta: str) -> None:
+    """Agrega el último intercambio al historial, recortando si supera el límite."""
+    historial = _get_history(sesion_id)
+    historial.append(HumanMessage(content=pregunta))
+    historial.append(AIMessage(content=respuesta))
+
+    # Mantener solo los últimos N intercambios (1 intercambio = 2 mensajes)
+    max_messages = _MAX_HISTORY_TURNS * 2
+    if len(historial) > max_messages:
+        _session_histories[sesion_id] = historial[-max_messages:]
 
 
 # ── Función principal de consulta ─────────────────────────────────────────────
@@ -125,25 +247,29 @@ def get_respuesta(sesion_id: str, pregunta: str) -> str:
     Returns:
         Respuesta del agente como string.
     """
-    global _agent_executor
+    executor = _ensure_agent_ready()
+    historial = _get_history(sesion_id)
 
-    if _agent_executor is None:
-        # Fallback si se llama fuera del contexto de FastAPI (ej: test_local.py)
-        logger.warning("AgentExecutor no inicializado. Construyendo ahora...")
-        _agent_executor = _build_agent()
+    try:
+        resultado: dict[str, Any] = executor.invoke({
+            "input": pregunta,
+            "chat_history": historial,
+        })
+    except Exception as exc:
+        fallback_executor = _retry_with_next_model(exc)
+        if fallback_executor is None:
+            if is_quota_error(exc):
+                raise RuntimeError(
+                    "Cuota de la API de Gemini agotada temporalmente. "
+                    "Espere unos minutos o verifique los límites en Google AI Studio."
+                ) from exc
+            raise
 
-    memoria = _get_or_create_memory(sesion_id)
-    historial = memoria.chat_memory.messages
-
-    resultado: dict[str, Any] = _agent_executor.invoke({
-        "input": pregunta,
-        "chat_history": historial,
-    })
+        resultado = fallback_executor.invoke({
+            "input": pregunta,
+            "chat_history": historial,
+        })
 
     respuesta: str = resultado.get("output", "No pude generar una respuesta.")
-
-    # Guardar el par (pregunta, respuesta) en la memoria de la sesión
-    memoria.chat_memory.add_user_message(pregunta)
-    memoria.chat_memory.add_ai_message(respuesta)
-
+    _append_to_history(sesion_id, pregunta, respuesta)
     return respuesta
