@@ -35,10 +35,18 @@
 
 ## 📌 Origen y Contexto del Proyecto
 
-Este proyecto fue desarrollado como solución al **Challenge Final de Inteligencia Artificial** del programa **Oracle Next Education (ONE)** impulsado por **Alura Latam**.
+Este proyecto fue desarrollado como entrega para el **Challenge Alura Agente** del programa **Oracle Next Education (ONE)** impulsado por **Alura Latam**.
+
+### Base en una Experiencia Real
+
+El problema que resuelve este agente **está inspirado en una experiencia laboral real** en una empresa del sector minero. Sin embargo, la implementación fue deliberadamente simplificada y adaptada en los siguientes aspectos:
+
+- **Alcance reducido:** Se modeló únicamente el flujo de trabajo del área de procesado de acopio y recepción de material — una sola área operativa de la empresa original.
+- **Empresa ficticia:** Se optó por usar el nombre **Cooperativa Minera El Dorado** y datos completamente ficticios (aunque lógicos y coherentes con el dominio) para resguardar la integridad e información confidencial de la empresa real.
+- **Datos sintéticos:** Todos los CSVs y documentos PDF son generados para este proyecto; no contienen información real de trabajadores, cargas ni operaciones.
 
 ### El Problema
-La **Cooperativa Minera El Dorado** administra el acopio, molienda y procesamiento de material aurífero. En el día a día, supervisores de área, inspectores de molienda y personal administrativo enfrentan dificultades para consultar rápidamente información crítica dispersa en múltiples archivos CSV (asistencia, rotación, estado de cargas e incidencias) y manuales normativos en PDF (protocolos de EPP, rotación de personal, evaluaciones).
+En el área de acopio de una empresa minera, supervisores, inspectores y personal administrativo necesitan consultar constantemente información dispersa en múltiples registros (asistencia, cargas, estado de molinos, incidencias) y manuales normativos (protocolos de EPP, reglamentos de rotación). Acceder a esta información de forma rápida, sin depender de reportes manuales ni conocer la estructura de los archivos, es el problema central que motiva este agente.
 
 ### La Solución: Agente El Dorado
 Un agente conversacional inteligente capaz de interpretar preguntas en lenguaje natural, seleccionar de forma autónoma la herramienta correcta (**Tool-Calling**) o realizar búsquedas semánticas sobre documentos PDF (**RAG**), devolviendo respuestas precisas, estructuradas y verificables sin inventar datos.
@@ -103,7 +111,9 @@ El proyecto implementa una **arquitectura desacoplada en 3 capas** que separa es
 
 ## 🎭 Roles de Usuario y Ejemplos de Consultas
 
-Agente El Dorado adapta sus respuestas a los 3 roles clave del Área de Acopio:
+> **Nota sobre los roles:** En la versión actual, el agente **no distingue entre tipos de usuario**. Cualquier persona con acceso al frontend puede realizar cualquier consulta disponible. La separación por rol (con restricción de acceso a información según perfil) es una **mejora futura planificada** — ver sección al final de este documento.
+
+Los roles documentados a continuación representan los **perfiles operativos** del área de acopio para los que se diseñaron las herramientas y los datos del agente:
 
 ### 1. 👷 Supervisor de Área
 - **Consulta**: *"¿Cuántos trabajadores faltaron la última semana por falta de EPP?"*
@@ -166,6 +176,47 @@ Las respuestas del agente son **trazables a fuentes de datos concretas**. A cont
 > **Nota para el evaluador:** Para una verificación independiente, puede ejecutar el script de pruebas end-to-end incluido en el repositorio (ver sección siguiente) o inspeccionar directamente los archivos CSV y PDF en `backend/data/`.
 
 ---
+
+## 🔭 Mejoras Futuras
+
+El proyecto es funcional en su versión actual, pero abre líneas de evolución relevantes:
+
+### Control de Acceso por Rol
+Actualmente el agente responde cualquier consulta sin distinción de quién pregunta. Una mejora natural sería implementar **autenticación con perfiles de rol**, de modo que:
+- Un **supervisor** solo pueda consultar asistencia e incidencias de su área.
+- Un **inspector** acceda únicamente a sus grupos y molinos asignados.
+- Un **administrativo** tenga visibilidad completa de cargas pero no de datos de personal.
+
+Esto implicaría agregar un middleware de autenticación en el backend (JWT o sesiones) y condicionar las herramientas disponibles en el prompt del agente según el rol autenticado.
+
+### Expansión a Más Áreas de la Empresa
+El flujo actual cubre solo el área de acopio y recepción. La arquitectura está diseñada para escalar: agregar nuevas herramientas (`tools.py`) y fuentes de datos (`data/`) para otras áreas (laboratorio, administración, logística) sin modificar el núcleo del agente.
+
+### Persistencia de Historial de Conversaciones
+La memoria del agente es in-memory por sesión. Una versión producción-ready persistiría el historial en una base de datos (PostgreSQL + pgvector) para análisis de uso, auditoría y continuidad entre sesiones.
+
+---
+
+## 💡 Aprendizajes y Reflexiones
+
+Este proyecto fue una oportunidad para consolidar varios aprendizajes que van más allá del challenge en sí:
+
+### Los Agentes como Complemento a Dashboards Clásicos
+Un dashboard tradicional es excelente para monitoreo y visualización de métricas conocidas. Un agente conversacional es ideal para **consultas ad hoc, no previstas y en lenguaje natural** — preguntas que nadie anticipó al diseñar el dashboard. Lejos de reemplazarse, ambos se complementan: el dashboard para el operador que sabe qué quiere ver, el agente para el que necesita explorar o formular preguntas complejas en tiempo real.
+
+### Agente con LangChain vs Agente con n8n
+Durante el programa ONE también se exploró la construcción de agentes con **n8n** (plataforma de automatización visual). La comparación es reveladora:
+
+| Dimensión | n8n (visual/low-code) | LangChain (código) |
+|---|---|---|
+| **Curva de entrada** | Baja — flujos visuales intuitivos | Media — requiere conocer Python y el ecosistema |
+| **Flexibilidad** | Limitada a nodos disponibles | Total — cualquier lógica es posible |
+| **Integración de datos propios** | Requiere conectores externos | FAISS, CSV, PDF directamente en código |
+| **Control del prompt** | Parcial | Completo |
+| **Escalabilidad a producción** | Depende de la instancia n8n | Dockerizable, desplegable en cualquier cloud |
+| **Mantenibilidad** | Flujos complejos difíciles de versionar | Git nativo, testeable, auditable |
+
+La conclusión práctica: **n8n es ideal para prototipos rápidos y automatizaciones simples**; LangChain con Python es la elección correcta cuando se necesita control total sobre el comportamiento del agente, integración con fuentes de datos propias y una arquitectura mantenible a largo plazo.
 
 ## 📁 Estructura del Repositorio
 
