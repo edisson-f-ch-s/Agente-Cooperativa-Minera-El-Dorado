@@ -20,7 +20,4 @@ services:
     plan: free
     envVars:
       - key: BACKEND_URL
-        fromService:
-          type: web
-          name: agente-dorado-backend
-          property: url
+        value: http://agente-dorado-backend:8000
