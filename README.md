@@ -1,169 +1,185 @@
-# AlurAgente — Cooperativa Minera El Dorado
+# ⛏️ AlurAgente — Cooperativa Minera El Dorado
 
-Agente conversacional de IA para el Área de Acopio de Material Aurífero de la Cooperativa Minera El Dorado. Permite a supervisores, inspectores y administrativos consultar en lenguaje natural datos operativos y documentación interna sin necesidad de conocimientos técnicos.
+> **Asistente Inteligente de IA para la Gestión Operativa y Normativa del Área de Acopio de Material Aurífero**
 
-Desarrollado como proyecto final para el **Challenge Alura Latam / ONE (Oracle Next Education)**.
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![LangChain 1.x](https://img.shields.io/badge/LangChain-1.x-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://www.langchain.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.41-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.0_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
 ---
 
-## 🎯 Características
+## 📌 Origen y Contexto del Proyecto
 
-- **Consultas en lenguaje natural** sobre datos operativos (CSV) y documentación interna (PDF).
-- **6 herramientas especializadas** para consultar asistencia, cargas, incidencias, molinos, grupos de inspectores y documentos.
-- **Memoria conversacional** aislada por sesión (`sesion_id`) para preguntas de seguimiento.
-- **Arquitectura desacoplada**: Backend en FastAPI + Frontend en Streamlit comunicados mediante HTTP REST API.
-- **RAG semántico** sobre 5 documentos PDF institucionales usando FAISS y Embeddings.
-- **Tool-calling con LangChain 1.x** sobre el modelo `gemini-2.0-flash` (1,500 solicitudes/día en la capa gratuita).
+Este proyecto fue desarrollado como solución al **Challenge Final de Inteligencia Artificial** del programa **Oracle Next Education (ONE)** impulsado por **Alura Latam**.
+
+### El Problema
+La **Cooperativa Minera El Dorado** administra el acopio, molienda y procesamiento de material aurífero. En el día a día, supervisores de área, inspectores de molienda y personal administrativo enfrentan dificultades para consultar rápidamente información crítica dispersa en múltiples archivos CSV (asistencia, rotación, estado de cargas e incidencias) y manuales normativos en PDF (protocolos de EPP, rotación de personal, evaluaciones).
+
+### La Solución: AlurAgente
+Un agente conversacional inteligente capaz de interpretar preguntas en lenguaje natural, seleccionar de forma autónoma la herramienta correcta (**Tool-Calling**) o realizar búsquedas semánticas sobre documentos PDF (**RAG**), devolviendo respuestas precisas, estructuradas y verificables sin invitar datos.
+
+---
+
+## 🎬 Demostración Visual y Capturas
+
+<!-- 
+   PLACEHOLDER: Inserta aquí un GIF animado o imagen de la aplicación en ejecución.
+   Ejemplo: ![Demo AlurAgente](docs/assets/demo_aluragente.gif) 
+-->
+> 📷 **Demostración de la Interfaz (Streamlit UI)**  
+> *(Espacio reservado para GIF o Captura de la aplicación en funcionamiento)*  
+> ![Placeholder Demostración UI](https://via.placeholder.com/800x450/1a1a2e/e2b040?text=Demostrac%C3%B3n+Streamlit+UI+-+AlurAgente)
 
 ---
 
 ## 🏗️ Arquitectura del Sistema
 
+El proyecto implementa una **arquitectura desacoplada en 3 capas** que separa estrictamente la interfaz de usuario, la lógica del agente y las fuentes de datos:
+
+<!-- 
+   PLACEHOLDER: Inserta aquí el diagrama de arquitectura en imagen si lo prefieres.
+   Ejemplo: ![Arquitectura](docs/assets/arquitectura.png) 
+-->
+
 ```text
-               ┌──────────────────────────────┐
-               │    Frontend (Streamlit)      │
-               │   Chat UI + Estado Sesión    │
-               └──────────────┬───────────────┘
-                              │ HTTP REST API (JSON)
-                              ▼
-               ┌──────────────────────────────┐
-               │      Backend (FastAPI)       │
-               │   Rate Limiter + CORS        │
-               └──────────────┬───────────────┘
-                              │
-                              ▼
-               ┌──────────────────────────────┐
-               │     Agente LangChain 1.x     │
-               │ Tool-Calling + Chat History  │
-               └──────────────┬───────────────┘
-                              │
-          ┌───────────────────┴───────────────────┐
-          ▼                                       ▼
- ┌─────────────────┐                     ┌─────────────────┐
- │   Tools CSV     │                     │    Tool RAG     │
- │ (Pandas Engine) │                     │ (FAISS Vector)  │
- └─────────────────┘                     └─────────────────┘
-  - Asistencia                            - Manual Acopio
-  - Cargas                                - Protocolo EPP
-  - Incidencias                           - Rotación
-  - Molinos                               - Recepción Mat.
-  - Grupos Inspectores                    - Pol. Molinos
+ ┌─────────────────────────────────────────────────────────────┐
+ │                    CLIENTE / FRONTEND                       │
+ │                    Streamlit Chat UI                        │
+ │           - Gestión de Sesión (UUID por usuario)            │
+ │           - Verificador de Salud en Vivo (Health Badge)     │
+ └──────────────────────────────┬──────────────────────────────┘
+                                │ HTTP REST (POST /preguntar)
+                                ▼
+ ┌─────────────────────────────────────────────────────────────┐
+ │                    SERVIDORE / BACKEND                      │
+ │                      FastAPI Service                        │
+ │           - Middleware CORS & Rate Limiter                  │
+ │           - Manejo Grácil de Errores de Cuota API           │
+ └──────────────────────────────┬──────────────────────────────┘
+                                │
+                                ▼
+ ┌─────────────────────────────────────────────────────────────┐
+ │                   ORQUESTADOR DEL AGENTE                    │
+ │                   LangChain 1.x Agent                       │
+ │           - Chat History por Sesión (In-Memory)             │
+ │           - Prompt de Dominio Minero y Reglas RAG          │
+ └──────────────┬───────────────────────────────┬──────────────┘
+                │ Tool-Calling                  │ Retrieval (FAISS)
+                ▼                               ▼
+ ┌──────────────────────────────┐ ┌──────────────────────────────┐
+ │    6 TOOLS OPERATIVAS (CSV)  │ │      TOOL RAG (PDFs)         │
+ │  - Asistencia & EPP          │ │  - Manual General Acopio     │
+ │  - Seguimiento de Cargas     │ │  - Protocolo Seguridad/EPP   │
+ │  - Incidencias Registradas   │ │  - Reglamento Rotación       │
+ │  - Estado de Molinos         │ │  - Recepción de Material     │
+ │  - Grupos de Inspectores     │ │  - Evaluación de Molinos     │
+ └──────────────────────────────┘ └──────────────────────────────┘
 ```
 
 ---
 
-## 📁 Estructura del Proyecto
+## 🛠️ Tecnologías y Stack Utilizado
+
+| Componente | Tecnología | Razón de Elección |
+|---|---|---|
+| **Lenguaje Core** | Python 3.11+ | Ecosistema estándar para IA y manipulación de datos. |
+| **Agente / Orquestador** | LangChain 1.x (`langchain_classic`) | Estándar de la industria para agentes tool-calling y RAG. |
+| **Modelo LLM** | Google Gemini 2.0 Flash | 1,500 peticiones/día gratuitas, baja latencia y soporte nativo de herramientas. |
+| **Embeddings & VectorStore** | Google Generative AI + FAISS | Búsqueda semántica ultrarrápida sobre PDFs sin dependencias de base de datos externa. |
+| **Backend Web** | FastAPI + Uvicorn | Rendimiento asíncrono elevado, validación automática Pydantic y swagger docs. |
+| **Frontend UI** | Streamlit | Interfaz interactiva de chat nativa en Python, limpia y responsiva. |
+| **Contenedores** | Docker & Docker Compose | Garantiza despliegue idéntico en cualquier entorno local o en la nube. |
+
+---
+
+## 🎭 Roles de Usuario y Ejemplos de Consultas
+
+AlurAgente adapta sus respuestas a los 3 roles clave del Área de Acopio:
+
+### 1. 👷 Supervisor de Área
+- **Consulta**: *"¿Cuántos trabajadores faltaron la última semana por falta de EPP?"*
+- **Respuesta del Agente**: *"En la última semana se registraron 4 ausencias asociadas a la falta de EPP obligatorio (casco y botas dieléctricas). Los trabajadores afectados son..."*
+
+### 2. 🔍 Inspector de Molienda
+- **Consulta**: *"¿A qué grupo pertenece el inspector INS-005 en julio de 2026 y qué molino tiene asignado?"*
+- **Respuesta del Agente**: *"El inspector INS-005 pertenece al Grupo G-02 para el período 2026-07, el cual tiene asignado el Molino M-02 (Trapiche El Sol)."*
+
+### 3. 🚚 Administrativo de Acopio
+- **Consulta**: *"¿Cuántas cargas de material aurífero están actualmente en estado de molienda?"*
+- **Respuesta del Agente**: *"Actualmente hay 5 cargas en proceso de molienda con un peso total estimado de 42.5 toneladas..."*
+
+### 4. 📄 Consultas de Normativa y Protocolos (RAG)
+- **Consulta**: *"¿Cuáles son los requisitos obligatorios de EPP según el protocolo de seguridad?"*
+- **Respuesta del Agente**: *"Según el Protocolo de Seguridad y EPP (Pág. 4), el personal de acopio debe contar obligatoriamente con: Casco tipo II, Botas de seguridad con puntera, Lentes de protección y Chaleco reflexivo..."*
+
+---
+
+## 📁 Estructura del Repositorio
 
 ```text
-Agente-Cooperativa-Minera-El-Dorado/
+.
 ├── backend/
 │   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py           # API FastAPI (Endpoints POST /preguntar, GET /health)
-│   │   ├── agent.py          # Agente LangChain + memoria por sesión
-│   │   ├── tools.py          # 6 herramientas de consulta (CSV y PDF)
-│   │   ├── vectorstore.py    # Generador/cargador del índice vectorial FAISS
-│   │   ├── gemini_config.py  # Manejador de modelos Gemini, fallbacks y rate limits
+│   │   ├── agent.py          # Lógica del agente LangChain y memoria de chat
+│   │   ├── gemini_config.py  # Gestión de modelos Gemini, fallbacks y cuotas
+│   │   ├── main.py           # Endpoints FastAPI (/preguntar, /health)
 │   │   ├── rate_limit.py     # Limitador de peticiones por minuto/día
-│   │   └── schemas.py        # Esquemas de validación Pydantic
-│   ├── data/
-│   │   ├── *.csv             # 6 archivos de datos operativos
-│   │   └── documentos/       # 5 PDFs de manuales y protocolos institucionales
-│   ├── test_local.py         # Script de pruebas end-to-end automáticas
-│   ├── requirements.txt      # Dependencias backend con versiones probadas
-│   ├── Dockerfile            # Contenedor del backend
-│   └── .env.example
+│   │   ├── schemas.py        # Modelos Pydantic de entrada y salida
+│   │   ├── tools.py          # 6 herramientas especializadas de consulta
+│   │   └── vectorstore.py    # Carga y generación del índice semántico FAISS
+│   ├── data/                 # Fuentes de datosCSV y PDFs institucionales
+│   ├── Dockerfile            # Imagen contenedor Backend
+│   ├── requirements.txt      # Dependencias backend con versiones fijadas
+│   └── test_local.py         # Script de pruebas end-to-end automáticas
 ├── frontend/
-│   ├── streamlit_app.py      # Interfaz de usuario interactiva en Streamlit
-│   ├── requirements.txt      # Dependencias del frontend
-│   ├── Dockerfile            # Contenedor del frontend
-│   └── .env.example
-├── docker-compose.yml        # Orquestación de contenedores
-├── README.md                 # Documentación principal
-└── INICIO_RAPIDO.md          # Guía rápida de instalación
+│   ├── Dockerfile            # Imagen contenedor Frontend
+│   ├── requirements.txt      # Dependencias frontend
+│   └── streamlit_app.py      # Interfaz de usuario interactiva
+├── docker-compose.yml        # Orquestación multicontenedor
+└── README.md                 # Documentación principal
 ```
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
-
-- **Lenguaje**: Python 3.11+
-- **Orquestador IA**: LangChain 1.x (`langchain_classic`)
-- **LLM / Embeddings**: Google Gemini (`gemini-2.0-flash`) vía `langchain-google-genai`
-- **Lectura de Documentos y RAG**: PyPDF, Pandas, FAISS (`faiss-cpu`)
-- **Backend API**: FastAPI, Uvicorn, Pydantic
-- **Frontend UI**: Streamlit
-- **Contenedores y Despliegue**: Docker, Docker Compose
-
----
-
-## 🚀 Instalación y Ejecución Local
-
-> **¿Primera vez?** Revisa [INICIO_RAPIDO.md](INICIO_RAPIDO.md) para la guía paso a paso.
+## 🚀 Guía de Instalación y Ejecución
 
 ### Requisitos Previos
+- [Docker Desktop](https://www.docker.com/) instalado.
+- API Key de Google Gemini ([Obtener gratis en Google AI Studio](https://aistudio.google.com/app/apikey)).
 
-- Docker y Docker Compose instalados.
-- Clave de API de Google Gemini ([obtener en Google AI Studio](https://aistudio.google.com/app/apikey)).
+### Despliegue Rápido con Docker Compose (Recomendado)
 
-### Opción 1: Docker Compose (Recomendado)
-
-1. Clona el repositorio:
+1. **Clonar el repositorio**:
    ```bash
    git clone https://github.com/tu-usuario/Agente-Cooperativa-Minera-El-Dorado.git
    cd Agente-Cooperativa-Minera-El-Dorado
    ```
 
-2. Crea el archivo `.env` en la raíz copiando la plantilla:
-   ```bash
-   cp .env.example .env
-   ```
-   Edita `.env` y coloca tu clave de API:
+2. **Configurar las variables de entorno**:
+   Crea un archivo `.env` en la raíz del proyecto:
    ```env
-   GOOGLE_API_KEY=tu_clave_aqui
+   GOOGLE_API_KEY=tu_clave_api_gemini_aqui
    GEMINI_MODEL=gemini-2.0-flash
    ```
 
-3. Levanta los contenedores:
+3. **Iniciar la aplicación**:
    ```bash
    docker-compose up -d --build
    ```
 
-4. Accede a las aplicaciones:
-   - **Frontend Streamlit**: `http://localhost:8501`
-   - **Backend API Docs**: `http://localhost:8000/docs`
-
----
-
-### Opción 2: Ejecución Manual en Entornos Virtuales
-
-#### 1. Backend (FastAPI)
-
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-export GOOGLE_API_KEY="tu_clave_aqui"
-uvicorn app.main:app --reload --port 8000
-```
-
-#### 2. Frontend (Streamlit)
-
-```bash
-cd frontend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-export BACKEND_URL="http://localhost:8000"
-streamlit run streamlit_app.py
-```
+4. **Acceder a los servicios**:
+   - 🌐 **Frontend (Chat UI)**: [http://localhost:8501](http://localhost:8501)
+   - ⚡ **Backend API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+   - 🩺 **Salud del Backend**: [http://localhost:8000/health](http://localhost:8000/health)
 
 ---
 
 ## 🧪 Pruebas Automáticas End-to-End
 
-Puedes validar el funcionamiento completo de las 6 herramientas ejecutando el script de prueba local:
+El proyecto incluye un script de prueba automatizado que evalúa las consultas contra el agente sin necesidad de iniciar la interfaz web:
 
 ```bash
 GOOGLE_API_KEY="tu_clave_aqui" backend/venv/bin/python backend/test_local.py --quick
@@ -171,38 +187,26 @@ GOOGLE_API_KEY="tu_clave_aqui" backend/venv/bin/python backend/test_local.py --q
 
 ---
 
-## 🎭 Roles y Ejemplos de Consultas
+## 🌐 Despliegue en la Nube
 
-El agente resuelve dudas específicas según el rol del usuario en la mina:
+La aplicación está completamente dockerizada y lista para desplegarse en cualquier proveedor cloud:
 
-### 1. Supervisor de Área
-- **Pregunta**: *"¿Cuántos trabajadores faltaron esta semana por falta de EPP?"*
-- **Respuesta esperada**: Resumen cuantitativo filtrando la asistencia y el estado de EPP en el archivo `asistencia.csv`.
-- **Pregunta**: *"Muéstrame las incidencias de alta severidad pendientes."*
+- **Hugging Face Spaces** (Docker Space / Streamlit)
+- **Render / Koyeb / Railway**
+- **OCI Compute (Oracle Cloud Infrastructure)**
 
-### 2. Inspector de Molienda
-- **Pregunta**: *"¿A qué grupo pertenece el inspector INS-005 en julio de 2026?"*
-- **Respuesta esperada**: Consulta en `grupos_inspectores.csv` identificando el grupo (ej. G-02) y su molino asignado.
-
-### 3. Administrativo de Acopio
-- **Pregunta**: *"¿Cuántas cargas están actualmente en estado de molienda?"*
-- **Respuesta esperada**: Total de cargas registradas en `cargas.csv` con estado 'en molienda'.
-
-### 4. Consultas de Procedimientos y Normativa (RAG)
-- **Pregunta**: *"¿Cuáles son los requisitos de EPP según el protocolo de seguridad?"*
-- **Respuesta esperada**: Recuperación semántica de fragmentos del `Protocolo_de_Seguridad_y_EPP.pdf` mediante FAISS.
+<!-- 
+   PLACEHOLDER: Inserta aquí el enlace o captura del proyecto en producción.
+   Ejemplo: [Probá la app en vivo aquí](https://huggingface.co/spaces/tu-usuario/aluragente)
+-->
+> 🔗 **Enlace de Producción**: *(Insertar enlace a la app desplegada en HF Spaces / Render / OCI)*  
+> 📷 **Captura de Producción**:  
+> ![Placeholder App en Producción](https://via.placeholder.com/800x400/0f3460/6ee7b7?text=Aplicaci%C3%B3n+Desplegada+en+la+Nube+-+AlurAgente)
 
 ---
 
-## 📸 Demostración de Despliegue
+## 📜 Licencia y Créditos
 
-La solución está lista para desplegarse en plataformas con soporte Docker (Hugging Face Spaces, Render, Koyeb, OCI Compute, etc.).
-
-> **Captura de Pantalla / Enlace de la Aplicación en Ejecución**:
-> *(Inserta aquí el enlace a tu app desplegada o la captura de pantalla comprobando el funcionamiento)*
-
----
-
-## 📜 Licencia
-
-Este proyecto fue desarrollado bajo la licencia **MIT** como entregable para el Challenge de Alura Latam y Oracle Next Education (ONE).
+- **Programa**: Oracle Next Education (ONE) / Alura Latam
+- **Challenge**: Agente Conversacional de IA
+- **Licencia**: [MIT License](LICENSE)
