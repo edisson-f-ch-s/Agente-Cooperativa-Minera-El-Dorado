@@ -24,13 +24,11 @@
 
 ---
 
-## 🎬 Demostración Visual
+## 🎬 Demostración en Funcionamiento
 
-<!-- Para agregar capturas propias: colócalas en docs/assets/ y reemplaza la ruta aquí -->
-<!-- Ejemplo: ![Demo Agente El Dorado](docs/assets/demo.gif) -->
+![Demostración Agente El Dorado — consultas operativas en el frontend desplegado](docs/assets/funcionamiento-agente.mp4)
 
-![Demo Agente El Dorado](docs/assets/demo.gif)
-
+> El video muestra consultas reales al agente desplegado en producción: asistencia y EPP, estado de molinos, grupos de inspectores y consultas de normativa vía RAG.
 > 📁 Los recursos visuales se encuentran en [`docs/assets/`](docs/assets/).
 
 ---
@@ -247,6 +245,76 @@ backend/venv/bin/python backend/test_local.py --quick
 # Ejecutar suite completa
 backend/venv/bin/python backend/test_local.py
 ```
+
+---
+
+## 🚢 Lecciones de Despliegue en Render
+
+El despliegue en producción presentó desafíos no documentados en la guía oficial de Render. Se registran aquí para facilitar la reproducción o el onboarding de nuevos colaboradores.
+
+### ❌ Error 1 — `render.yaml` con propiedad inválida en `fromService`
+
+**Síntoma:**
+```
+services[1].envVars[0].fromService.property
+invalid service property: url. Valid properties are connectionString, host, hostport, port.
+```
+
+**Causa:** La sintaxis de Render para referenciar propiedades de otro servicio no soporta `url` como propiedad. Se intentó inyectar automáticamente la URL del backend al frontend mediante `fromService`.
+
+**Solución:** Declarar `BACKEND_URL` como variable manual (`sync: false`) y configurarla desde el dashboard de Render una vez que el backend está desplegado y su URL pública es conocida.
+
+```yaml
+# render.yaml — forma correcta
+- key: BACKEND_URL
+  sync: false  # El operador la configura manualmente en el dashboard
+```
+
+---
+
+### ❌ Error 2 — Frontend no conecta al backend (`Backend fuera de línea`)
+
+**Síntoma:** El frontend mostraba `❌ Backend fuera de línea` con endpoint `http://agente-dorado-backend:8000`.
+
+**Causa:** Se asumió erróneamente que Render comparte una red Docker interna entre servicios (como Docker Compose). En Render, **cada servicio es completamente aislado** y solo se comunica mediante sus URLs públicas HTTPS.
+
+**Solución:** Configurar `BACKEND_URL` con la URL pública del backend:
+```
+BACKEND_URL = https://agente-dorado-backend.onrender.com
+```
+
+> **Regla clave:** En Render, nunca usar `http://nombre-servicio:puerto`. Siempre usar la URL HTTPS pública asignada por Render al servicio.
+
+---
+
+### ⚠️ Cold Start en Free Tier
+
+El plan gratuito de Render suspende los servicios tras ~15 minutos de inactividad. La primera consulta tras un periodo de reposo puede tardar **20-30 segundos** en responder mientras el contenedor reinicia.
+
+**Impacto en el usuario:** El frontend puede mostrar el backend como "fuera de línea" brevemente si el backend aún está arrancando. El health check del sidebar se actualiza en cuanto el backend responde.
+
+**Mitigación recomendada:** Para producción real, considerar el plan paid de Render (Always On) o configurar un cron job externo que haga ping al `/health` cada 10 minutos.
+
+---
+
+### ⚠️ Cuota de API de Google Gemini (Free Tier)
+
+Durante pruebas intensivas se agotó la cuota de peticiones por minuto (`RPM`) del plan gratuito de Google AI Studio.
+
+**Síntoma:** `429 RESOURCE_EXHAUSTED — You have exhausted your quota`
+
+**Solución implementada:** El backend tiene un sistema de fallback automático entre modelos Gemini. Si el modelo principal falla por cuota, intenta en orden:
+
+```python
+FALLBACK_GEMINI_MODELS = (
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+)
+```
+
+El modelo activo en cada momento es visible en el panel lateral del frontend (badge "Modelo:").
 
 ---
 
