@@ -8,7 +8,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.agent import get_respuesta, initialize_agent
+from app.agent import get_active_model, get_respuesta, initialize_agent
+from app.gemini_config import is_model_unavailable_error, is_quota_error
+from app.rate_limit import get_rate_limiter
 from app.schemas import HealthResponse, PreguntaRequest, RespuestaResponse
 from app.vectorstore import get_vectorstore
 
@@ -27,7 +29,7 @@ async def lifespan(app: FastAPI):
     logger.info("Iniciando AlurAgente...")
     get_vectorstore()       # Carga o construye el índice FAISS
     initialize_agent()      # Construye el AgentExecutor con las 6 tools
-    logger.info("AlurAgente listo.")
+    logger.info("AlurAgente listo. Modelo activo: %s", get_active_model())
     yield
     logger.info("AlurAgente detenido.")
 
@@ -56,26 +58,69 @@ async def preguntar(request: PreguntaRequest) -> RespuestaResponse:
     """
     Recibe una pregunta en lenguaje natural y devuelve la respuesta del agente.
     """
+    allowed, limit_message = get_rate_limiter().check()
+    if not allowed:
+        raise HTTPException(status_code=429, detail=limit_message)
+
     try:
         respuesta = get_respuesta(request.sesion_id, request.pregunta)
         return RespuestaResponse(respuesta=respuesta)
 
-    except Exception as exc:
-        mensaje = str(exc).lower()
-        # Errores de la API de Google (clave inválida, cuota, etc.)
-        if any(kw in mensaje for kw in ("api key", "quota", "google", "credentials", "permission")):
+    except RuntimeError as exc:
+        mensaje = str(exc)
+        if is_quota_error(exc) or "cuota" in mensaje.lower():
             raise HTTPException(
                 status_code=503,
-                detail="El servicio de IA no está disponible temporalmente.",
+                detail=(
+                    "El servicio de IA alcanzó el límite de uso de la capa gratuita. "
+                    "Espere unos minutos e intente de nuevo. "
+                    "Para evaluación del challenge, una clave gratuita de Google AI Studio "
+                    "es suficiente con uso moderado."
+                ),
+            )
+        if "ningún modelo gemini disponible" in mensaje.lower():
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "No hay un modelo Gemini disponible. Configure "
+                    "GEMINI_MODEL=gemini-2.0-flash (recomendado) o "
+                    "gemini-1.5-flash en su archivo .env."
+                ),
+            )
+        logger.exception("Error de configuración del agente.")
+        raise HTTPException(status_code=503, detail=mensaje)
+
+    except Exception as exc:
+        if is_quota_error(exc):
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "El servicio de IA alcanzó el límite de uso de la capa gratuita. "
+                    "Espere unos minutos e intente de nuevo."
+                ),
+            )
+        if is_model_unavailable_error(exc):
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "El modelo Gemini configurado ya no está disponible. "
+                    "Actualice GEMINI_MODEL a gemini-2.0-flash o reinicie el backend "
+                    "para activar el fallback automático."
+                ),
             )
         logger.exception("Error interno al procesar la consulta.")
         raise HTTPException(
             status_code=500,
-            detail=f"Error interno del servidor: {exc}",
+            detail="Error interno del servidor al procesar la consulta.",
         )
 
 
 @app.get("/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
-    """Verifica que el servicio está en funcionamiento."""
-    return HealthResponse(status="ok")
+    """Verifica que el servicio y el agente están operativos."""
+    modelo = get_active_model()
+    return HealthResponse(
+        status="ok" if modelo else "degraded",
+        agente_listo=modelo is not None,
+        modelo_activo=modelo,
+    )

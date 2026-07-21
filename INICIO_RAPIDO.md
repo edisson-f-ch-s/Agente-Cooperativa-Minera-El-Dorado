@@ -7,7 +7,7 @@
 3. Haz clic en **"Create API Key"**
 4. Copia la clave generada
 
-⚠️ **Importante**: La capa gratuita de Gemini 2.0 Flash es suficiente para desarrollo y pruebas.
+⚠️ **Importante**: La capa gratuita de Gemini (modelos Flash) es suficiente para desarrollo y evaluación del challenge. Use `GEMINI_MODEL=gemini-3.5-flash` en su `.env`.
 
 ---
 
@@ -127,13 +127,30 @@ Una vez que el frontend esté corriendo, prueba estas preguntas:
 
 ## 🛑 Solución de Problemas
 
-### Error: "El servicio de IA no está disponible"
-- Verifica que la `GOOGLE_API_KEY` esté configurada correctamente
+### Error: "El servicio de IA alcanzó el límite de uso"
+- Es normal tras muchas consultas seguidas en la capa gratuita
+- Espere 1–2 minutos e intente de nuevo
+- Evite ejecutar `test_local.py` completo varias veces seguidas
+
+### Error: "El modelo Gemini configurado ya no está disponible"
+- Actualice su `.env`: `GEMINI_MODEL=gemini-3.5-flash`
+- O reinicie el backend: el fallback automático probará modelos compatibles
+
+### Error de clave de API
+- Verifica que la `GOOGLE_API_KEY` esté configurada correctamente en `.env`
 - Revisa que la clave sea válida en [Google AI Studio](https://aistudio.google.com/app/apikey)
 
 ### El frontend no se conecta al backend
 - Verifica que el backend esté corriendo en `http://localhost:8000`
-- Prueba acceder a `http://localhost:8000/health` — debe devolver `{"status": "ok"}`
+- Prueba acceder a `http://localhost:8000/health` — debe devolver `"agente_listo": true` y un `modelo_activo` válido
+
+### Error 404: modelo Gemini no disponible
+- Actualice `.env` con `GEMINI_MODEL=gemini-3.5-flash` y reinicie: `docker compose up -d`
+- El backend intenta fallback automático a `gemini-3.1-flash-lite`
+
+### Límite de consultas alcanzado
+- En despliegue compartido, el backend limita consultas para proteger la cuota gratuita
+- Para pruebas locales sin límite: `RATE_LIMIT_RPM=0` y `RATE_LIMIT_RPD=0` en `.env`
 
 ### Docker: Error al construir imágenes
 - Asegúrate de tener Docker y Docker Compose instalados

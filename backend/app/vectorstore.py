@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 # Rutas
 PDF_DIR = Path(__file__).parent.parent / "data" / "documentos"
 FAISS_INDEX_DIR = Path(__file__).parent.parent / "faiss_index"
+EMBEDDING_MODEL = "models/gemini-embedding-001"
 
 # Singleton en memoria del proceso
 _vectorstore: FAISS | None = None
@@ -25,7 +26,7 @@ def _build_vectorstore() -> FAISS:
     Carga los 5 PDFs, los divide en chunks y construye el índice FAISS.
     Omite PDFs no encontrados con un warning (no detiene la inicialización).
     """
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL)
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 
     all_docs = []
@@ -67,7 +68,7 @@ def get_vectorstore() -> FAISS:
     if _vectorstore is not None:
         return _vectorstore
 
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL)
 
     if FAISS_INDEX_DIR.exists():
         try:

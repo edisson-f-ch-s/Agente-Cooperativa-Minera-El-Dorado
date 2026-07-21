@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build: ./backend
@@ -8,6 +6,15 @@ services:
       - "8000:8000"
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash}
+      - RATE_LIMIT_RPM=${RATE_LIMIT_RPM:-8}
+      - RATE_LIMIT_RPD=${RATE_LIMIT_RPD:-400}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json,urllib.request; r=urllib.request.urlopen('http://localhost:8000/health'); d=json.loads(r.read()); assert d.get('agente_listo')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
 
   frontend:
@@ -18,5 +25,6 @@ services:
     environment:
       - BACKEND_URL=http://backend:8000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped

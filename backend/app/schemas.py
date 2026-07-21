@@ -25,3 +25,5 @@ class RespuestaResponse(BaseModel):
 class HealthResponse(BaseModel):
     """Response body del endpoint GET /health."""
     status: str = "ok"
+    agente_listo: bool = False
+    modelo_activo: str | None = None

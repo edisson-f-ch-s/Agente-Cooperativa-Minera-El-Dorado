@@ -9,7 +9,7 @@ Agente conversacional de IA para el Área de Acopio de Material Aurífero de la 
 - **Memoria conversacional** por sesión para preguntas de seguimiento
 - **Arquitectura desacoplada** backend FastAPI + frontend Streamlit comunicados por HTTP
 - **RAG semántico** sobre 5 documentos PDF usando FAISS
-- **Tool-calling** con LangChain sobre Gemini 2.0 Flash
+- **Tool-calling** con LangChain sobre Gemini 3.5 Flash (capa gratuita)
 
 ## 🏗️ Arquitectura
 
@@ -73,9 +73,11 @@ git clone https://github.com/tu-usuario/aluragente.git
 cd aluragente
 ```
 
-2. Crea un archivo `.env` en la raíz con tu clave de API:
+2. Crea un archivo `.env` en la raíz con tu clave de API (no lo subas al repositorio):
 ```bash
 GOOGLE_API_KEY=tu_clave_aqui
+# Opcional; recomendado para evaluación del challenge (capa gratuita)
+GEMINI_MODEL=gemini-3.5-flash
 ```
 
 3. Levanta los servicios:
@@ -142,7 +144,7 @@ python test_local.py
 
 ## 🛠️ Tecnologías
 
-- **Backend**: FastAPI, LangChain, Google Gemini 2.0 Flash
+- **Backend**: FastAPI, LangChain, Google Gemini 3.5 Flash
 - **Frontend**: Streamlit
 - **Procesamiento de datos**: Pandas, PyPDF
 - **Vector Store**: FAISS
@@ -169,6 +171,20 @@ El sistema soporta consultas para tres roles principales:
 
 ### Backend
 - `GOOGLE_API_KEY`: Clave de API de Google Gemini (obligatoria)
+- `GEMINI_MODEL`: Modelo de chat de Gemini (opcional; default: `gemini-3.5-flash`). Respaldo automático: `gemini-3.1-flash-lite`
+- `RATE_LIMIT_RPM`: Máximo de consultas por minuto en despliegue compartido (default: `8`; `0` = sin límite)
+- `RATE_LIMIT_RPD`: Máximo de consultas por día (default: `400`; `0` = sin límite)
+
+### Capa gratuita y evaluación del challenge
+
+El proyecto usa modelos **Flash** con capa gratuita de [Google AI Studio](https://aistudio.google.com/app/apikey). Es suficiente para la evaluación del challenge con uso moderado (varios evaluadores probando consultas puntuales).
+
+- **Modelo recomendado**: `gemini-3.5-flash` (estable, jul 2026)
+- **Respaldo automático**: si el modelo configurado está deprecado (error 404), el backend prueba `gemini-3.1-flash-lite` sin intervención manual
+- **Protección de cuota**: límites configurables (`RATE_LIMIT_RPM`, `RATE_LIMIT_RPD`) para un despliegue compartido durante la calificación
+- **Uso local**: cada estudiante/evaluador puede clonar el repo y usar su propia `GOOGLE_API_KEY` sin límites compartidos
+- **Límite de cuota de Google**: si aparece un mensaje de límite alcanzado, espere 1–2 minutos; la capa gratuita tiene topes por minuto/día por proyecto
+- **No requiere tarjeta de crédito** para desarrollo ni evaluación
 
 ### Frontend
 - `BACKEND_URL`: URL del backend (default: `http://localhost:8000`)
@@ -199,7 +215,9 @@ Verifica el estado del servicio.
 **Response:**
 ```json
 {
-  "status": "ok"
+  "status": "ok",
+  "agente_listo": true,
+  "modelo_activo": "gemini-3.5-flash"
 }
 ```
 
