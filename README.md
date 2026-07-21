@@ -26,10 +26,10 @@
 
 ## 🎬 Demostración en Funcionamiento
 
-![Demostración Agente El Dorado — consultas operativas en el frontend desplegado](docs/assets/funcionamiento-agente.mp4)
+![Demostración Agente El Dorado — consultas operativas en el frontend desplegado](docs/assets/funcionamiento-agente.gif)
 
-> El video muestra consultas reales al agente desplegado en producción: asistencia y EPP, estado de molinos, grupos de inspectores y consultas de normativa vía RAG.
-> 📁 Los recursos visuales se encuentran en [`docs/assets/`](docs/assets/).
+> El GIF muestra consultas reales al agente desplegado en producción: asistencia y EPP, estado de molinos, grupos de inspectores y consultas de normativa vía RAG.  
+> 📥 [Descargar video en alta calidad (MP4)](docs/assets/funcionamiento-agente.mp4)
 
 ---
 
