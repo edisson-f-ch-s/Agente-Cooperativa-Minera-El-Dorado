@@ -5,3 +5,8 @@ faiss_index/
 venv/
 .kiro/
 *.log
+
+# Archivos de control interno
+ESTADO_DEL_PROYECTO.md
+INICIO_RAPIDO.md
+PROMPT_MAESTRO_ALURAGENTE.md
