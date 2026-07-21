@@ -104,29 +104,17 @@ def _build_agent(model: str) -> AgentExecutor:
 
 def _probe_model(model: str) -> None:
     """
-    Verifica que el modelo responde antes de usarlo en producción.
-    Solo detecta errores de modelo no existente (404); los errores de cuota
-    se ignoran aquí porque el agente debe arrancar aunque la cuota esté agotada.
+    Verifica que el modelo responde correctamente.
+    Lanza excepción si el modelo no está disponible o la cuota está agotada.
     """
     llm = ChatGoogleGenerativeAI(model=model, temperature=0, max_retries=0)
-    try:
-        llm.invoke("Responde exactamente: OK")
-    except Exception as exc:
-        # Re-lanzar solo si el modelo no existe; la cuota agotada no impide el arranque.
-        if not is_quota_error(exc):
-            raise
-        logger.warning(
-            "Cuota agotada durante probe de %s — el agente arrancará de todas formas. "
-            "Las consultas fallarán hasta que la cuota se restaure.",
-            model,
-        )
+    llm.invoke("Responde exactamente: OK")
 
 
 def _initialize_with_fallback() -> tuple[AgentExecutor, str]:
     """
-    Selecciona el primer modelo disponible de la lista de candidatos.
-    Si la cuota está agotada, el agente se construye igualmente para que el
-    servidor arranque y retorne mensajes de error descriptivos en cada consulta.
+    Selecciona el primer modelo funcional de la lista de candidatos.
+    Si algún candidato falla por cuota o indisponibilidad, prueba el siguiente candidato.
     """
     errors: list[str] = []
 
@@ -136,23 +124,21 @@ def _initialize_with_fallback() -> tuple[AgentExecutor, str]:
             executor = _build_agent(model)
             if model != get_model_candidates()[0]:
                 logger.warning(
-                    "Modelo configurado no disponible. Usando fallback: %s",
+                    "Modelo preferido no disponible/sin cuota. Usando fallback: %s",
                     model,
                 )
             return executor, model
         except Exception as exc:
-            if is_model_unavailable_error(exc):
-                errors.append(f"{model}: no disponible")
-                logger.warning("Modelo %s no disponible: %s", model, exc)
+            if is_model_unavailable_error(exc) or is_quota_error(exc):
+                errors.append(f"{model}: {exc}")
+                logger.warning("Modelo %s no operativo: %s", model, exc)
                 continue
             raise
 
-    detail = "; ".join(errors) if errors else "sin modelos configurados"
-    raise RuntimeError(
-        "Ningún modelo Gemini disponible. "
-        f"Detalle: {detail}. "
-        "Use GEMINI_MODEL=gemini-3.5-flash o gemini-3.1-flash-lite."
-    )
+    # Si todos fallan por cuota/indisponibilidad, usar el primero configurado como último recurso
+    last_resort = get_model_candidates()[0]
+    logger.warning("Ningún modelo pasó el probe. Usando %s como último recurso.", last_resort)
+    return _build_agent(last_resort), last_resort
 
 
 def initialize_agent() -> None:
@@ -179,11 +165,11 @@ def _ensure_agent_ready() -> AgentExecutor:
 
 def _retry_with_next_model(exc: Exception) -> AgentExecutor | None:
     """
-    Si el modelo activo quedó deprecado en caliente, reconstruye con el siguiente candidato.
+    Si el modelo activo falló (cuota o indisponibilidad), reconstruye con el siguiente candidato.
     """
     global _agent_executor, _active_model
 
-    if not is_model_unavailable_error(exc) or _active_model is None:
+    if not (is_model_unavailable_error(exc) or is_quota_error(exc)) or _active_model is None:
         return None
 
     candidates = get_model_candidates()
@@ -200,7 +186,7 @@ def _retry_with_next_model(exc: Exception) -> AgentExecutor | None:
             _active_model = model
             return _agent_executor
         except Exception as fallback_exc:
-            if is_model_unavailable_error(fallback_exc):
+            if is_model_unavailable_error(fallback_exc) or is_quota_error(fallback_exc):
                 logger.warning("Fallback %s tampoco disponible: %s", model, fallback_exc)
                 continue
             raise
@@ -236,6 +222,22 @@ def _append_to_history(sesion_id: str, pregunta: str, respuesta: str) -> None:
 
 # ── Función principal de consulta ─────────────────────────────────────────────
 
+def _clean_output(raw_output: Any) -> str:
+    """Extrae texto limpio si el output del agente viene como string, dict o lista de bloques."""
+    if isinstance(raw_output, str):
+        return raw_output
+    if isinstance(raw_output, list):
+        texts = []
+        for item in raw_output:
+            if isinstance(item, dict) and "text" in item:
+                texts.append(str(item["text"]))
+            elif isinstance(item, str):
+                texts.append(item)
+        if texts:
+            return "\n".join(texts)
+    return str(raw_output)
+
+
 def get_respuesta(sesion_id: str, pregunta: str) -> str:
     """
     Procesa una pregunta del usuario y devuelve la respuesta del agente.
@@ -270,6 +272,7 @@ def get_respuesta(sesion_id: str, pregunta: str) -> str:
             "chat_history": historial,
         })
 
-    respuesta: str = resultado.get("output", "No pude generar una respuesta.")
+    raw_output = resultado.get("output", "No pude generar una respuesta.")
+    respuesta: str = _clean_output(raw_output)
     _append_to_history(sesion_id, pregunta, respuesta)
     return respuesta

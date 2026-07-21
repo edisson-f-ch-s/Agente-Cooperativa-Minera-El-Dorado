@@ -15,13 +15,12 @@ import os
 # 1500 RPD, thought_signature manejado nativamente por langchain-google-genai >=4.0.
 DEFAULT_GEMINI_MODEL = "gemini-2.0-flash"
 
-# Orden de fallback: de mayor a menor cuota disponible en free tier.
+# Orden de fallback: modelos activos compatibles en la plataforma.
 FALLBACK_GEMINI_MODELS = (
     "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-2.5-flash",
-    # gemini-3.x: solo 20 RPD, usar únicamente si los anteriores no están disponibles
+    "gemini-2.0-flash-lite",
     "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
 )
 
 
@@ -45,17 +44,18 @@ def get_model_candidates() -> list[str]:
 
 def is_model_unavailable_error(exc: Exception) -> bool:
     """
-    Detecta errores de modelo inexistente o deprecado.
-    Compatible con el SDK google-genai antiguo (HTTP 404) y el nuevo (ClientError).
+    Detecta errores de modelo inexistente, deprecado o no disponible temporalmente (503).
     """
     message = str(exc).lower()
     return (
         "404" in message
+        or "503" in message
         or "not found" in message
         or "no longer available" in message
         or "is not supported for generatecontent" in message
         or "not_found" in message
         or "model_not_found" in message
+        or "unavailable" in message
     )
 
 

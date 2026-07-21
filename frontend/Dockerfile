@@ -6,8 +6,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código de la aplicación
+# Copiar código de la aplicación y recursos visuales
 COPY streamlit_app.py .
+COPY assets/ ./assets/
 
 # Puerto del servidor
 EXPOSE 8501

@@ -1,4 +1,4 @@
-# ⛏️ AlurAgente — Cooperativa Minera El Dorado
+# ⛏️ Agente El Dorado — Cooperativa Minera El Dorado
 
 > **Asistente Inteligente de IA para la Gestión Operativa y Normativa del Área de Acopio de Material Aurífero**
 
@@ -6,7 +6,7 @@
 [![LangChain 1.x](https://img.shields.io/badge/LangChain-1.x-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://www.langchain.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.41-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.0_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-3.5_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
 ---
@@ -18,8 +18,8 @@ Este proyecto fue desarrollado como solución al **Challenge Final de Inteligenc
 ### El Problema
 La **Cooperativa Minera El Dorado** administra el acopio, molienda y procesamiento de material aurífero. En el día a día, supervisores de área, inspectores de molienda y personal administrativo enfrentan dificultades para consultar rápidamente información crítica dispersa en múltiples archivos CSV (asistencia, rotación, estado de cargas e incidencias) y manuales normativos en PDF (protocolos de EPP, rotación de personal, evaluaciones).
 
-### La Solución: AlurAgente
-Un agente conversacional inteligente capaz de interpretar preguntas en lenguaje natural, seleccionar de forma autónoma la herramienta correcta (**Tool-Calling**) o realizar búsquedas semánticas sobre documentos PDF (**RAG**), devolviendo respuestas precisas, estructuradas y verificables sin invitar datos.
+### La Solución: Agente El Dorado
+Un agente conversacional inteligente capaz de interpretar preguntas en lenguaje natural, seleccionar de forma autónoma la herramienta correcta (**Tool-Calling**) o realizar búsquedas semánticas sobre documentos PDF (**RAG**), devolviendo respuestas precisas, estructuradas y verificables sin inventar datos.
 
 ---
 
