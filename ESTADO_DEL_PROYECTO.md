@@ -53,7 +53,6 @@ El proyecto **AlurAgente** está **100% operativo** y listo para ejecutarse.
 | README.md | ✅ | Documentación completa del proyecto |
 | INICIO_RAPIDO.md | ✅ | Guía paso a paso en español |
 | PROMPT_MAESTRO_ALURAGENTE.md | ✅ | Especificación técnica original |
-| .kiro/specs/aluragente/ | ✅ | Requirements, Design, Tasks |
 
 ### Datos
 

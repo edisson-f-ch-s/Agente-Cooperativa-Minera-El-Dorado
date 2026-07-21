@@ -3,3 +3,5 @@ __pycache__/
 *.faiss
 faiss_index/
 venv/
+.kiro/
+*.log
