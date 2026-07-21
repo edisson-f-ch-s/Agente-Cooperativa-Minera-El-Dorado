@@ -20,4 +20,6 @@ services:
     plan: free
     envVars:
       - key: BACKEND_URL
-        value: http://agente-dorado-backend:8000
+        # Pon aquí la URL pública de tu backend en Render una vez desplegado.
+        # Ejemplo: https://agente-dorado-backend.onrender.com
+        sync: false
