@@ -372,5 +372,5 @@ El modelo activo en cada momento es visible en el panel lateral del frontend (ba
 ## 📜 Licencia y Créditos
 
 - **Programa**: Oracle Next Education (ONE) / Alura Latam
-- **Challenge**: Agente Conversacional de IA
+- **Challenge**: Challenge Alura Agente
 - **Licencia**: [MIT License](LICENSE)
