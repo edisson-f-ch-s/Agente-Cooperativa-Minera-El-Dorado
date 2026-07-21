@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: agente-dorado-backend
+    env: docker
+    dockerContext: backend
+    dockerfilePath: backend/Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+
+  - type: web
+    name: agente-dorado-frontend
+    env: docker
+    dockerContext: frontend
+    dockerfilePath: frontend/Dockerfile
+    plan: free
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: agente-dorado-backend
+          property: url
