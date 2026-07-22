@@ -197,17 +197,36 @@ with st.sidebar:
 
     st.markdown("#### ⚙️ Estado del Sistema")
 
-    # Verificar salud del backend
+    # Verificar salud del backend con soporte para Cold Start en Render
+    backend_status = "error"
+    model_name = ""
+
     try:
-        health = requests.get(f"{BACKEND_URL}/health", timeout=5)
+        health = requests.get(f"{BACKEND_URL}/health", timeout=12)
         if health.status_code == 200:
             data = health.json()
-            st.success("✅ Backend Conectado")
-            model = data.get("modelo_activo", "desconocido")
-            st.markdown(f'Modelo: <span class="model-badge">{model}</span>', unsafe_allow_html=True)
+            backend_status = "ok"
+            model_name = data.get("modelo_activo", "desconocido")
+        elif health.status_code in [502, 503, 504]:
+            backend_status = "waking"
         else:
-            st.error("⚠️ Backend con observaciones")
+            backend_status = "warning"
+    except requests.exceptions.Timeout:
+        backend_status = "waking"
     except Exception:
+        backend_status = "offline"
+
+    if backend_status == "ok":
+        st.success("✅ Backend Conectado")
+        st.markdown(f'Modelo: <span class="model-badge">{model_name}</span>', unsafe_allow_html=True)
+    elif backend_status == "waking":
+        st.warning("⏳ Servidor iniciando (Cold Start)...")
+        st.caption("Render desactiva contenedores tras inactividad. Responderá en unos segundos.")
+        if st.button("🔄 Ver Estado", key="btn_retry_health", use_container_width=True):
+            st.rerun()
+    elif backend_status == "warning":
+        st.warning("⚠️ Backend respondiendo con observaciones")
+    else:
         st.error("❌ Backend fuera de línea")
         st.caption(f"Endpoint: `{BACKEND_URL}`")
 
