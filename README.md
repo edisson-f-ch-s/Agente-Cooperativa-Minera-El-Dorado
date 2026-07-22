@@ -20,7 +20,13 @@
 | **Backend API Docs** | [https://agente-dorado-backend.onrender.com/docs](https://agente-dorado-backend.onrender.com/docs) |
 | **Health Check** | [https://agente-dorado-backend.onrender.com/health](https://agente-dorado-backend.onrender.com/health) |
 
-> **Nota:** Los servicios están desplegados en el plan gratuito de Render. Si el backend estuvo inactivo, puede tardar ~30 segundos en inicializarse la primera consulta (cold start).
+> ⚠️ **Nota de Infraestructura (Plan Gratuito de Render):**  
+> Los servicios se encuentran alojados en la capa gratuita (*Free Tier*) de Render, la cual suspende automáticamente los contenedores tras **15 minutos de inactividad**.
+>
+> 💡 **Recomendaciones para la prueba:**
+> - **Primera consulta o reingreso (Cold Start):** Si al ingresar ves el mensaje `⏳ Servidor iniciando (Cold Start)...` en el panel lateral, el contenedor está despertando. Aguarda de **15 a 20 segundos** sin cerrar la pestaña.
+> - **Verificación sin refrescar:** Puedes hacer clic en el botón **`🔄 Ver Estado`** en la barra lateral. Una vez que el indicador cambie a `✅ Backend Conectado`, todas las consultas responderán de forma fluida e inmediata.
+> - **¿Por qué no usamos pings continuos (Keep-Alive)?** Para respetar los términos de uso y no agotar prematuramente la cuota mensual gratuita de 750 horas de Render, la solución arquitectónica implementada gestiona la suspensión de forma transparente y resiliente sin necesidad de trucos artificiales.
 
 ---
 
@@ -338,13 +344,16 @@ BACKEND_URL = https://agente-dorado-backend.onrender.com
 
 ---
 
-### ⚠️ Cold Start en Free Tier
+### ⚠️ Cold Start en Free Tier y Gestión Resiliente
 
-El plan gratuito de Render suspende los servicios tras ~15 minutos de inactividad. La primera consulta tras un periodo de reposo puede tardar **20-30 segundos** en responder mientras el contenedor reinicia.
+El plan gratuito de Render suspende los servicios tras ~15 minutos de inactividad. La primera consulta tras un periodo de reposo puede tardar **15-25 segundos** en responder mientras la máquina virtual e imagen Docker reinician.
 
-**Impacto en el usuario:** El frontend puede mostrar el backend como "fuera de línea" brevemente si el backend aún está arrancando. El health check del sidebar se actualiza en cuanto el backend responde.
-
-**Mitigación recomendada:** Para producción real, considerar el plan paid de Render (Always On) o configurar un cron job externo que haga ping al `/health` cada 10 minutos.
+**Decisión de diseño frente a Keep-Alive:**
+- Se descartó la implementación de *scripts* de ping continuo (*keep-alive* con cron o UptimeRobot) para no agotar la cuota mensual gratuita de 750 horas de Render (mantener 2 servicios encendidos 24/7 consumiría la cuota en 15 días).
+- En su lugar, se implementó una **estrategia de recuperación transparente**:
+  1. El frontend detecta respuestas intermedias `502/503` o tiempos de respuesta elevados durante la suspensión y muestra el estado `⏳ Servidor iniciando (Cold Start)...`.
+  2. Las consultas POST del chat cuentan con un tiempo de espera extendido (`timeout=90s`), permitiendo que el usuario envíe una pregunta aunque el backend esté dormido; la petición esperará al arranque del contenedor y devolverá la respuesta sin interrumpir la sesión.
+  3. El usuario puede pulsar el botón **`🔄 Ver Estado`** en la barra lateral para verificar la conexión en cualquier momento sin necesidad de recargar la página completa.
 
 ---
 
