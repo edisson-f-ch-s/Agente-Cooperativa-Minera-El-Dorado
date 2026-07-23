@@ -202,11 +202,13 @@ with st.sidebar:
     model_name = ""
 
     try:
-        health = requests.get(f"{BACKEND_URL}/health", timeout=12)
+        # Timeout de 30s permite a Render iniciar el contenedor en el primer intento sin abortar
+        health = requests.get(f"{BACKEND_URL}/health", timeout=30)
         if health.status_code == 200:
             data = health.json()
             backend_status = "ok"
             model_name = data.get("modelo_activo", "desconocido")
+            st.session_state["_waking_count"] = 0
         elif health.status_code in [502, 503, 504]:
             backend_status = "waking"
         else:
@@ -221,9 +223,18 @@ with st.sidebar:
         st.markdown(f'Modelo: <span class="model-badge">{model_name}</span>', unsafe_allow_html=True)
     elif backend_status == "waking":
         st.warning("⏳ Servidor iniciando (Cold Start)...")
-        st.caption("Render desactiva contenedores tras inactividad. Responderá en unos segundos.")
-        if st.button("🔄 Ver Estado", key="btn_retry_health", use_container_width=True):
+        st.caption("Conectando con el backend en Render. Aguarde un momento...")
+        waking_count = st.session_state.get("_waking_count", 0)
+        if waking_count < 4:
+            st.session_state["_waking_count"] = waking_count + 1
+            import time
+            time.sleep(3)
             st.rerun()
+        else:
+            st.session_state["_waking_count"] = 0
+            if st.button("🔄 Reintentar Conexión", key="btn_retry_health", use_container_width=True):
+                st.rerun()
+            st.markdown(f"[🔗 Abrir Health Check directo]({BACKEND_URL}/health)")
     elif backend_status == "warning":
         st.warning("⚠️ Backend respondiendo con observaciones")
     else:
